@@ -11,10 +11,9 @@ git submodule update --init --recursive || true
 rustup target add x86_64-pc-windows-gnu || true
 
 # （可选）安装常用 vcpkg 包（可能很慢）
-VCPKG_ROOT=/opt/vcpkg
+VCPKG_ROOT=/workspace/vcpkg
 if [ -d "${VCPKG_ROOT}" ]; then
   echo "Using VCPKG_ROOT=${VCPKG_ROOT}"
-  # 示例：根据项目需要替换/添加包名
   ${VCPKG_ROOT}/vcpkg install --triplet x64-mingw-static --recurse || true
 fi
 
