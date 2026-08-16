@@ -20,9 +20,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # 在 /opt 安装 vcpkg（镜像构建时 bootstrap）
 WORKDIR /opt
-# 使用官方 GitHub vcpkg；若你需要国内镜像可改为 gitee 镜像
+# 在工作区安装 vcpkg（镜像构建时 bootstrap）
+WORKDIR /workspace
 RUN git clone --depth=1 https://github.com/microsoft/vcpkg.git vcpkg && \
-    ./vcpkg/bootstrap-vcpkg.sh
+    ./vcpkg/bootstrap-vcpkg.sh && \
+    chown -R vscode:vscode /workspace/vcpkg
+
+# 设置 vcpkg 环境变量并放入 PATH
+ENV VCPKG_ROOT=/workspace/vcpkg
+ENV PATH=$VCPKG_ROOT:$PATH
+
+# 设置工作目录与路径
+WORKDIR /workspace
+ENV PATH="/root/.cargo/bin:${PATH}"
+ENV CARGO_TERM_COLOR=always
+
+# 切回 vscode 用户
+USER vscode
 
 # 设置 vcpkg 环境变量并放入 PATH
 ENV VCPKG_ROOT=/opt/vcpkg
