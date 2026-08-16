@@ -1,18 +1,37 @@
-name: Windows
+name: Windows CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened]
-
-permissions:
-  contents: read
-  actions: write
 
 jobs:
-  build-and-test:
-    uses: ./.github/workflows/build.yml
-    with:
-      os: windows-latest
-      platform: windows-x86_64
-      package: false
+  build-windows-msvc:
+    runs-on: windows-latest
+    env:
+      VCPKG_ROOT: ${{ runner.temp }}\vcpkg
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup vcpkg
+        run: |
+          git clone --depth=1 https://github.com/microsoft/vcpkg.git "%VCPKG_ROOT%"
+          pushd "%VCPKG_ROOT%"
+          .\bootstrap-vcpkg.bat
+          .\vcpkg install --triplet x64-windows --recurse || true
+          popd
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Add Windows targets
+        run: rustup target add x86_64-pc-windows-msvc
+      - name: Build (cargo)
+        run: cargo build --release -v
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3dtiles-windows
+          path: target\release\*.exe
